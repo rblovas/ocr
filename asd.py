@@ -5,6 +5,7 @@ import argparse
 import copy
 
 import cv2 as cv
+import numpy as np
 
 
 def main():
@@ -19,74 +20,137 @@ def main():
     # cv.imshow('After filter', filtered)
 
     # szegmentalas
-    #   get rows
-    img_rows = get_image_rows(filtered)
-    # print(img_rows)
 
-    #   get chars
-    img_chars = get_image_chars(filtered, img_rows)
-    # print(img_chars)
+    #   HORIZONTAL: get rows
+    rows = horizontalCut(filtered)
+    coordinates_of_rows = rows[0]
+    img_of_the_rows = rows[1]
 
-    #   show where is the chars
-    img_with_borders = add_char_border_to_the_image(filtered, img_rows, img_chars)
-    cv.imshow('After border', img_with_borders)
+    #   VERTICAL: get first cut of chars in all rows
+    ALL_coordinates_of_chars = []
+    ALL_images_of_chars = []
+    for row in range(len(coordinates_of_rows)):
+        cut = verticalCut(img_of_the_rows[row])
+        ALL_coordinates_of_chars.append(cut[0])
+        ALL_images_of_chars.append(cut[1])
 
+    ALL_coordinates_of_cutted_chars = []
+    ALL_images_of_cutted_chars = []
+    for row in range(len(coordinates_of_rows)):  # minden sorban
+        ALL_coordinates_of_cutted_chars.append([])
+        ALL_images_of_cutted_chars.append([])
+        for col in range(len(ALL_coordinates_of_chars[row])):  # minden sorban található char
+            cut = horizontalCut(ALL_images_of_chars[row][col])
 
-def add_char_border_to_the_image(p_img, img_rows, img_chars):
-    img = copy.copy(p_img)
-    rows = img.shape[0]
-    cols = img.shape[1]
-
-    for img_row in range(len(img_rows)):
-        for char_col in img_chars[img_row]:
-
-            for char_rows in range(img_rows[img_row][0], img_rows[img_row][1]):
-                img[char_rows][char_col[0]] = 0
-                img[char_rows][char_col[1]] = 0
-
-            for char_col in range(char_col[0], char_col[1]):
-                img[img_rows[img_row][0]][char_col] = 0
-                img[img_rows[img_row][1]][char_col] = 0
-
-    return img
-
-
-def get_image_chars(p_img, img_rows):
-    img = copy.copy(p_img)
-    rows = img.shape[0]
-    cols = img.shape[1]
-    img_chars = []
-
-    inchar = 0
-    for rowIndex in range(len(img_rows)):
-        img_row = img_rows[rowIndex]
-        img_chars.append([])
-        for pixelCol in range(cols):
-            hasBlack = 0
-            for pixelRow in range(img_row[0], img_row[1]):
-                if img[pixelRow, pixelCol] == 0:
-                    hasBlack = 1
-
-            if hasBlack:
-                if inchar == 0:
-                    img_chars[rowIndex].append([pixelCol])
-                    inchar = 1
+            new_cut = []
+            if len(cut[0]) > 1:
+                new_cut = solveSpaceInsideChars(cut)
             else:
-                if inchar == 1:
-                    img_chars[rowIndex][len(img_chars[rowIndex]) - 1].append(pixelCol - 1)
-                    inchar = 0
+                new_cut.append(cut[0][0])
+                new_cut.append(cut[1][0])
 
-    return img_chars
+            ALL_coordinates_of_cutted_chars[row].append(new_cut[0])
+            ALL_images_of_cutted_chars[row].append(new_cut[1])
+
+    cv.imshow('Show a char', ALL_images_of_cutted_chars[1][1])
+
+    addBorder(filtered, coordinates_of_rows, ALL_coordinates_of_chars, ALL_coordinates_of_cutted_chars)
 
 
-def get_image_rows(p_img):
+def solveSpaceInsideChars(p_cut):
+    new_cut = []
+    new_cut.append([p_cut[0][0][0], p_cut[0][1][1]])
+
+    pont = p_cut[1][0]
+    vonal = p_cut[1][1]
+
+    new_img = []
+    for row in range(pont.shape[0]):
+        new_img.append(np.array(pont[row], dtype='uint8'))
+
+    for row in range(6):
+        new_row = []
+        for col in range(pont.shape[1]):
+            new_row.append(255)
+        new_img.append(np.array(new_row, dtype='uint8'))
+
+    for row in range(vonal.shape[0]):
+        new_img.append(np.array(vonal[row], dtype='uint8'))
+
+    new_cut.append([])
+    new_cut[1] = np.array(new_img)
+    cv.imshow('asd', new_cut[1])
+
+    return new_cut
+
+
+def addBorder(p_img, p_row_coordinates, p_all_col_coordinates, ALL_coordinates_of_cutted_chars):
     img = copy.copy(p_img)
     rows = img.shape[0]
     cols = img.shape[1]
-    img_rows = []
 
-    inrow = 0
+    for row_coordinate in p_row_coordinates:
+        row_index = p_row_coordinates.index(row_coordinate)
+        for col_coordinate in p_all_col_coordinates[row_index]:
+            col_index = p_all_col_coordinates[row_index].index(col_coordinate)
 
+            newRowrangeStart = row_coordinate[0] + ALL_coordinates_of_cutted_chars[row_index][col_index][0]
+            newRowrangeEnd = row_coordinate[0] + ALL_coordinates_of_cutted_chars[row_index][col_index][1]
+            for row in range(newRowrangeStart, newRowrangeEnd):
+                img[row, col_coordinate[0]] = 0
+                img[row, col_coordinate[1]] = 0
+            for col in range(col_coordinate[0], col_coordinate[1]):
+                img[newRowrangeStart, col] = 0
+                img[newRowrangeEnd, col] = 0
+
+    cv.imshow('asd', img)
+
+
+def verticalCut(p_img):
+    img = copy.copy(p_img)
+    rows = img.shape[0]
+    cols = img.shape[1]
+
+    coordinates = []
+    coordinate = []
+    elements = []
+    element = []
+    inElement = 0
+
+    for pixelCol in range(cols):
+        hasBlack = 0
+        for pixelRow in range(rows):
+            if img[pixelRow, pixelCol] == 0:
+                hasBlack = 1
+
+        if hasBlack:
+            if inElement == 0:
+                inElement = 1
+                element = []
+                coordinate = []
+                coordinate.append(pixelCol)
+            element.append(img[:, pixelCol])
+        else:
+            if inElement == 1:
+                coordinate.append(pixelCol - 1)
+                coordinates.append(coordinate)
+                elements.append(np.array(np.transpose(element)))
+                inElement = 0
+
+    return (coordinates, elements)
+
+
+def horizontalCut(p_img):
+    img = copy.copy(p_img)
+    rows = img.shape[0]
+    cols = img.shape[1]
+
+    coordinates = []
+    coordinate = []
+    elements = []
+    element = []
+
+    inElement = 0
     for row in range(rows):
         hasBlack = 0
         for col in range(cols):
@@ -94,15 +158,24 @@ def get_image_rows(p_img):
                 hasBlack = 1
 
         if hasBlack:
-            if inrow == 0:
-                img_rows.append([row])
-                inrow = 1
+            if inElement == 0:
+                coordinate = []
+                element = []
+                coordinate.append(row)
+                inElement = 1
+            element.append(img[row])
         else:
-            if inrow == 1:
-                img_rows[len(img_rows) - 1].append(row - 1)
-                inrow = 0
+            if inElement == 1:
+                coordinate.append(row - 1)
+                coordinates.append(coordinate)
+                elements.append(np.array(element))
+                inElement = 0
 
-    return img_rows
+    if len(coordinate) == 1:
+        coordinate.append(row - 1)
+        coordinates.append(coordinate)
+        elements.append(np.array(element))
+    return (coordinates, elements)
 
 
 def filter(p_img, n):
