@@ -19,7 +19,7 @@ import numpy as np
 
 def main():
     #   PREPROCESS
-    img = preprocess.get_image('helloworld.png')
+    img = preprocess.get_image('learn.png')
     grayscaled = preprocess.grayscale(img)
     filtered = preprocess.filter(grayscaled, 3)
 
