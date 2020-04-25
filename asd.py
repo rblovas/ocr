@@ -40,10 +40,10 @@ def main():
     #   HORIZONTAL
     ALL_coordinates_of_cutted_chars = []
     ALL_images_of_cutted_chars = []
-    for row in range(len(coordinates_of_rows)):  # minden sorban
+    for row in range(len(coordinates_of_rows)):
         ALL_coordinates_of_cutted_chars.append([])
         ALL_images_of_cutted_chars.append([])
-        for col in range(len(ALL_coordinates_of_chars[row])):  # minden sorban található char
+        for col in range(len(ALL_coordinates_of_chars[row])):
             cut = segment.horizontalCut(ALL_images_of_chars[row][col])
             new_cut = []
             if len(cut[0]) > 1:
@@ -54,19 +54,24 @@ def main():
 
             ALL_coordinates_of_cutted_chars[row].append(new_cut[0])
             ALL_images_of_cutted_chars[row].append(new_cut[1])
-    cv.imshow('Show a char', ALL_images_of_cutted_chars[1][2])
-    showSteps.addBorder(filtered, coordinates_of_rows, ALL_coordinates_of_chars, ALL_coordinates_of_cutted_chars)
+
+    counter = 0
+    chars = []
+    for rowIndex in range(len(ALL_images_of_cutted_chars)):
+        for colIndex in range(len(ALL_images_of_cutted_chars[rowIndex])):
+            char = Char.Char()
+            char.number = counter
+            char.setSizeByCoordinates(ALL_coordinates_of_cutted_chars[rowIndex][colIndex][0], ALL_coordinates_of_cutted_chars[rowIndex][colIndex][1])
+            char.img = ALL_images_of_cutted_chars[rowIndex][colIndex]
+            chars.append(char)
+            counter = counter + 1
 
     #   WALSH
-    resizedChars = walsh.resizeChars(ALL_images_of_cutted_chars)
-    # cv.imshow('Show a char', resizedChars[0][1])
-    walshImages = walsh.generateWalshImages()
-    sajatvektorok = walsh.osszesSajatVetkor(resizedChars, walshImages)
-    print(sajatvektorok)
-    # char = Char.Char(1, 2, ['asd'], ['asd'])
-    # char.printData()
+    walsh.resizeChars(chars)
+    walsh.setVectors(chars)
+    # chars[0].printData()
 
-
+    learning.learn(chars)
 
 if __name__ == "__main__":
     main()
