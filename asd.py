@@ -9,6 +9,7 @@ from helpers import segment
 from helpers import walsh
 from helpers import showSteps
 from helpers import Char
+from helpers import doit
 
 import argparse
 import copy
@@ -19,7 +20,8 @@ import numpy as np
 
 def main():
     #   PREPROCESS
-    img = preprocess.get_image('learn.png')
+    # img = preprocess.get_image('learn.png')
+    img = preprocess.get_image('helloworld.png')
     grayscaled = preprocess.grayscale(img)
     filtered = preprocess.filter(grayscaled, 3)
 
@@ -71,7 +73,10 @@ def main():
     walsh.setVectors(chars)
     # chars[0].printData()
 
-    learning.learn(chars)
+    # learning.learn(chars)
+    doit.setValues(chars)
+    doit.printText(chars)
+
 
 if __name__ == "__main__":
     main()
