@@ -21,7 +21,7 @@ import numpy as np
 def main():
     #   PREPROCESS
     # img = preprocess.get_image('learn.png')
-    img = preprocess.get_image('helloworld.png')
+    img = preprocess.get_image('miniVozxtestArial.png')
     grayscaled = preprocess.grayscale(img)
     filtered = preprocess.filter(grayscaled, 3)
 
@@ -64,6 +64,7 @@ def main():
             char = Char.Char()
             char.number = counter
             char.setSizeByCoordinates(ALL_coordinates_of_cutted_chars[rowIndex][colIndex][0], ALL_coordinates_of_cutted_chars[rowIndex][colIndex][1])
+            char.coordinate =ALL_coordinates_of_chars[rowIndex][colIndex]
             char.img = ALL_images_of_cutted_chars[rowIndex][colIndex]
             chars.append(char)
             counter = counter + 1
