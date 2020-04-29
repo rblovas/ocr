@@ -19,5 +19,5 @@ def learn(chars):
             'value': char.value,
         }
     str = json.dumps(dict, indent=4)
-    with open('database/abc.json', 'w+') as outfile:
+    with open('database/times.json', 'w+') as outfile:
         outfile.write(str)

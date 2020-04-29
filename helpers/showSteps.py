@@ -1,4 +1,6 @@
 import copy
+import cv2 as cv
+
 
 def addBorder(p_img, p_row_coordinates, p_all_col_coordinates, ALL_coordinates_of_cutted_chars):
     img = copy.copy(p_img)
@@ -19,4 +21,10 @@ def addBorder(p_img, p_row_coordinates, p_all_col_coordinates, ALL_coordinates_o
                 img[newRowrangeStart, col] = 0
                 img[newRowrangeEnd, col] = 0
 
-    # cv.imshow('asd', img)
+    cv.imshow('Borders', img)
+
+
+def showInMovedWindow(winname, img, x, y):
+    cv.namedWindow(winname)  # Create a named window
+    cv.moveWindow(winname, x, y)  # Move it to (x,y)
+    cv.imshow(winname, img)

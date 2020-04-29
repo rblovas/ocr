@@ -2,6 +2,7 @@ import argparse
 import copy
 import cv2 as cv
 
+
 def filter(p_img, n):
     img = copy.copy(p_img)
     rows = img.shape[0]
@@ -25,14 +26,15 @@ def grayscale(img):
     src = img
     # Convert the image to Gray
     src_gray = cv.cvtColor(src, cv.COLOR_RGB2GRAY)
-    _, dst = cv.threshold(src_gray, 200, 255, 0)
+    _, dst = cv.threshold(src_gray, 125, 255, 0) #photohoz--> 125, többihez: 200
     # cv.imshow('Grayscaled img', dst)
     return dst
 
 
-def get_image(p_img):
+def get_image(p_img, p_font='arial'):
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', help='Path to input image.', default=p_img)
+    parser.add_argument('--input', help='Path to input image.', default='images/' + p_font + '/' + p_img + '.png')
     args = parser.parse_args()
     src = cv.imread(cv.samples.findFile(args.input))
 

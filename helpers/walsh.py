@@ -48,7 +48,7 @@ def generateWalshImages():
                     image[i].append(colorToNum(image1[i][j]) * colorToNum(image2[i][j]))
             images.append(np.array(image, dtype='uint8'))
 
-    # cv.imshow('asd', images[16])
+    #cv.imshow('walsh', images[16])
     return images
 
 

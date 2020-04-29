@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-
 from __future__ import print_function
 
 from helpers import learning
@@ -11,19 +9,29 @@ from helpers import showSteps
 from helpers import Char
 from helpers import doit
 
-import argparse
-import copy
-
 import cv2 as cv
-import numpy as np
 
+LEARN = False
+FONT = 'arial'
+IMG_NAME = 'photo_hello'
+
+# good example: lorem_short_md, photo_hello
 
 def main():
     #   PREPROCESS
-    # img = preprocess.get_image('learn.png')
-    img = preprocess.get_image('miniVozxtestArial.png')
+    if LEARN:
+        img = preprocess.get_image('learn', FONT)
+    else:
+        img = preprocess.get_image(IMG_NAME, FONT)
+
     grayscaled = preprocess.grayscale(img)
-    filtered = preprocess.filter(grayscaled, 3)
+    showSteps.showInMovedWindow('grayscaled', grayscaled, 0, 600)
+    if FONT == 'arial':
+        filter_n = 3
+    else:
+        filter_n = 4
+    filtered = preprocess.filter(grayscaled, filter_n)
+    showSteps.showInMovedWindow('filtered', filtered, 0, 200)
 
     #   SEGMENT
     #   HORIZONTAL
@@ -42,6 +50,7 @@ def main():
     #   HORIZONTAL
     ALL_coordinates_of_cutted_chars = []
     ALL_images_of_cutted_chars = []
+    spaceInside = []
     for row in range(len(coordinates_of_rows)):
         ALL_coordinates_of_cutted_chars.append([])
         ALL_images_of_cutted_chars.append([])
@@ -50,6 +59,7 @@ def main():
             new_cut = []
             if len(cut[0]) > 1:
                 new_cut = segment.solveSpaceInsideChars(cut)
+                spaceInside.append([row, col])
             else:
                 new_cut.append(cut[0][0])
                 new_cut.append(cut[1][0])
@@ -57,26 +67,37 @@ def main():
             ALL_coordinates_of_cutted_chars[row].append(new_cut[0])
             ALL_images_of_cutted_chars[row].append(new_cut[1])
 
+    showSteps.addBorder(img, coordinates_of_rows, ALL_coordinates_of_chars, ALL_coordinates_of_cutted_chars)
+
     counter = 0
     chars = []
     for rowIndex in range(len(ALL_images_of_cutted_chars)):
         for colIndex in range(len(ALL_images_of_cutted_chars[rowIndex])):
             char = Char.Char()
             char.number = counter
-            char.setSizeByCoordinates(ALL_coordinates_of_cutted_chars[rowIndex][colIndex][0], ALL_coordinates_of_cutted_chars[rowIndex][colIndex][1])
-            char.coordinate =ALL_coordinates_of_chars[rowIndex][colIndex]
+            char.setSizeByCoordinates(ALL_coordinates_of_cutted_chars[rowIndex][colIndex][0],
+                                      ALL_coordinates_of_cutted_chars[rowIndex][colIndex][1])
+            char.coordinate = ALL_coordinates_of_chars[rowIndex][colIndex]
+            if [rowIndex, colIndex] in spaceInside:
+                char.space = True
             char.img = ALL_images_of_cutted_chars[rowIndex][colIndex]
             chars.append(char)
             counter = counter + 1
+    #chars[0].showImage()
 
-    #   WALSH
-    walsh.resizeChars(chars)
-    walsh.setVectors(chars)
-    # chars[0].printData()
+    if len(chars) > 0:
+        #   WALSH
+        walsh.resizeChars(chars)
+        walsh.setVectors(chars)
 
-    # learning.learn(chars)
-    doit.setValues(chars)
-    doit.printText(chars)
+        if LEARN:
+            learning.learn(chars)
+        else:
+            doit.setValues(chars, FONT)
+            doit.printText(chars)
+    else:
+        print('A kepen nem talalhato olvashato karakter')
+        cv.imshow('Filtered', filtered)
 
 
 if __name__ == "__main__":
